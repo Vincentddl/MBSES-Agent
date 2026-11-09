@@ -3,14 +3,15 @@ import math
 from functools import lru_cache
 
 from app.config import settings
-from app.http_client import post_json
+from app.http_client import post_json, remaining_seconds
 
 
 class MockEmbedder:
     """Deterministic lexical hashing, NOT a semantic embedding quality evaluation."""
-    def embed(self, texts):
+    def embed(self, texts, deadline=None):
         result = []
         for text in texts:
+            remaining_seconds(deadline)
             vec = [0.0] * settings.EMBED_DIM
             text = "".join(text.lower().split())
             for old, new in [("水冲洗", "防水"), ("水洗", "防水"), ("清洗", "防水"), ("重量", "质量")]:
@@ -26,12 +27,12 @@ class MockEmbedder:
 
 
 class QwenEmbedder:
-    def embed(self, texts):
+    def embed(self, texts, deadline=None):
         result = []
         for start in range(0, len(texts), settings.EMBED_BATCH_SIZE):
             batch = texts[start:start + settings.EMBED_BATCH_SIZE]
             response = post_json("/embeddings", {"model": settings.QWEN_EMBED_MODEL,
-                                 "input": batch, "dimensions": settings.EMBED_DIM})
+                                 "input": batch, "dimensions": settings.EMBED_DIM}, deadline=deadline)
             data = response.get("data", [])
             if sorted(item.get("index", -1) for item in data) != list(range(len(batch))):
                 raise RuntimeError("Embedding返回数量或索引不匹配")

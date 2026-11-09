@@ -45,6 +45,17 @@ class Settings:
     PROMPT_VERSION = "mbse-draft-v2"
     SCHEMA_VERSION = "2.0"
     TASK_LEASE_SECONDS = 600
+    # 任务级总时限：超时即取消后续阶段与重试，而不是单次请求超时后仍继续烧预算。
+    TASK_DEADLINE_SECONDS = float(os.getenv("TASK_DEADLINE_SECONDS", "180"))
+    # 回收线程扫描间隔；租约过期且心跳停了的RUNNING任务会被重新排队。
+    TASK_REAP_INTERVAL_SECONDS = float(os.getenv("TASK_REAP_INTERVAL_SECONDS", "60"))
+    # 心跳续租间隔；0表示按TASK_LEASE_SECONDS/3自动计算。
+    HEARTBEAT_INTERVAL_SECONDS = float(os.getenv("HEARTBEAT_INTERVAL_SECONDS", "0"))
+    # 用量台账成本估算单价（CNY/千tokens），仅真实模型调用有token数。
+    PRICE_INPUT_PER_1K = float(os.getenv("PRICE_INPUT_PER_1K", "0.0008"))
+    PRICE_OUTPUT_PER_1K = float(os.getenv("PRICE_OUTPUT_PER_1K", "0.002"))
+    # 关键事实对照：元素数值必须出现在引用片段原文中，防止凭空补数。
+    FACT_CHECK_ENABLED = os.getenv("FACT_CHECK_ENABLED", "true").lower() == "true"
 
     def __init__(self):
         for key, choices in {
@@ -62,6 +73,10 @@ class Settings:
             raise ValueError("Batch and context limits must be positive")
         if self.CONNECT_TIMEOUT <= 0 or self.LLM_TIMEOUT_SECONDS <= 0 or not 0 <= self.LLM_MAX_RETRIES <= 5:
             raise ValueError("Invalid timeout or retry limit")
+        if self.TASK_DEADLINE_SECONDS <= 0 or self.TASK_REAP_INTERVAL_SECONDS <= 0:
+            raise ValueError("Task deadline and reap interval must be positive")
+        if self.HEARTBEAT_INTERVAL_SECONDS < 0 or self.PRICE_INPUT_PER_1K < 0 or self.PRICE_OUTPUT_PER_1K < 0:
+            raise ValueError("Heartbeat interval and price entries must be non-negative")
         if not 64 <= self.LLM_MAX_OUTPUT_TOKENS <= 32768:
             raise ValueError("Invalid output token limit")
 

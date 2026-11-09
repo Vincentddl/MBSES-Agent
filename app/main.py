@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import create_all, get_db
-from app.models import DocChunk, GenerationTask, KnowledgeDocument, ModelElement, ModelRelationship, Project
-from app.schemas import ConfirmRequest, DraftUpdate, GenerateRequest, ProjectCreate
+from app.models import Conversation, ConversationTurn, DocChunk, GenerationTask, KnowledgeDocument, ModelElement, ModelRelationship, Project, TaskUsage
+from app.schemas import ConfirmRequest, ConversationCreate, DraftUpdate, GenerateRequest, ProjectCreate
 from app.readiness import inspect_services
 from app.services import BusinessError, confirm_task, create_task, ingest_document, start_workers, stop_workers, submit_generation, update_draft
 
@@ -103,10 +103,34 @@ def knowledge(project_id: str, db: Session = Depends(get_db)):
 
 @app.post("/api/generate", status_code=202)
 def generate(req: GenerateRequest):
-    task_id, status, created = create_task(req.project_id, req.input_text, req.idempotency_key, req.bypass_cache)
+    task_id, status, created = create_task(req.project_id, req.input_text, req.idempotency_key, req.bypass_cache,
+        req.conversation_id, req.expected_conversation_revision)
     if created or status == "PENDING":
         submit_generation(task_id)
     return {"task_id": task_id, "status": status, "deduplicated": not created}
+
+
+@app.post("/api/conversations", status_code=201)
+def conversation_create(req: ConversationCreate, db: Session = Depends(get_db)):
+    if db.get(Project, req.project_id) is None:
+        raise HTTPException(404, "项目不存在")
+    row = Conversation(project_id=req.project_id)
+    db.add(row)
+    db.commit()
+    return {"id": row.id, "project_id": row.project_id, "revision": row.revision, "turns": []}
+
+
+@app.get("/api/conversations/{conversation_id}")
+def conversation_get(conversation_id: str, db: Session = Depends(get_db)):
+    row = db.get(Conversation, conversation_id)
+    if row is None:
+        raise HTTPException(404, "会话不存在")
+    turns = db.query(ConversationTurn, GenerationTask).join(GenerationTask,
+        ConversationTurn.task_id == GenerationTask.id).filter(
+        ConversationTurn.conversation_id == conversation_id).order_by(ConversationTurn.turn_index).all()
+    return {"id": row.id, "project_id": row.project_id, "revision": row.revision,
+        "turns": [{"task_id": task.id, "turn_index": turn.turn_index, "input_text": task.input_text,
+                   "status": task.status, "draft_revision": task.revision} for turn, task in turns]}
 
 
 @app.get("/api/tasks/{task_id}")
@@ -114,7 +138,9 @@ def task_get(task_id: str, db: Session = Depends(get_db)):
     task = db.get(GenerationTask, task_id)
     if task is None:
         raise HTTPException(404, "任务不存在")
+    turn = db.get(ConversationTurn, task_id)
     return {"id": task.id, "project_id": task.project_id, "status": task.status,
+        "conversation_id": turn.conversation_id if turn else None,
         "input_text": task.input_text, "result_json": task.result_json,
         "validation_errors": task.validation_errors, "warnings": task.warnings,
         "revision": task.revision, "retrieved_chunks": task.retrieved_chunks,
@@ -130,6 +156,19 @@ def validate(task_id: str, req: DraftUpdate):
 @app.post("/api/tasks/{task_id}/confirm")
 def confirm(task_id: str, req: ConfirmRequest):
     return confirm_task(task_id, req.expected_revision)
+
+
+@app.get("/api/tasks/{task_id}/usage")
+def task_usage(task_id: str, db: Session = Depends(get_db)):
+    # Like task_get, protected by loopback-only middleware; projects are not tenants.
+    if db.get(GenerationTask, task_id) is None:
+        raise HTTPException(404, "任务不存在")
+    rows = db.query(TaskUsage).filter_by(task_id=task_id).order_by(TaskUsage.created_at).all()
+    return [{"id": row.id, "stage": row.stage, "backend": row.backend, "http_status": row.http_status,
+             "prompt_tokens": row.prompt_tokens, "completion_tokens": row.completion_tokens,
+             "total_tokens": row.total_tokens, "latency_ms": row.latency_ms,
+             "cost_estimate": row.cost_estimate, "detail": row.detail, "created_at": row.created_at}
+            for row in rows]
 
 
 @app.get("/api/tasks/{task_id}/export")

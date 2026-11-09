@@ -157,7 +157,7 @@ def test_mock_embedding_is_deterministic():
 def test_qwen_embedding_restores_provider_index(monkeypatch):
     import app.embedding as module
     monkeypatch.setattr(module.settings, "EMBED_DIM", 2)
-    monkeypatch.setattr(module, "post_json", lambda *args: {"data": [
+    monkeypatch.setattr(module, "post_json", lambda *args, **kwargs: {"data": [
         {"index": 1, "embedding": [0, 1]}, {"index": 0, "embedding": [1, 0]}]})
     assert QwenEmbedder().embed(["a", "b"]) == [[1.0, 0.0], [0.0, 1.0]]
 

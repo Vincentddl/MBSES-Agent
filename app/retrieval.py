@@ -4,6 +4,7 @@ from app.cache import fingerprint, get_cache
 from app.config import settings
 from app.database import SessionLocal
 from app.embedding import get_embedder
+from app.http_client import remaining_seconds
 from app.models import DocChunk, KnowledgeDocument, Project
 from app.vector_store import get_vector_store
 
@@ -12,7 +13,8 @@ def normalize_query(text):
     return re.sub(r"\s+", " ", text.strip())
 
 
-def retrieve(project_id, query, expected_kb_version=None):
+def retrieve(project_id, query, expected_kb_version=None, deadline=None):
+    remaining_seconds(deadline)
     query = normalize_query(query)
     with SessionLocal() as db:
         project = db.get(Project, project_id)
@@ -28,8 +30,10 @@ def retrieve(project_id, query, expected_kb_version=None):
     cached = cache.get(key)
     if cached is not None:
         return cached, True
-    query_vec = get_embedder().embed([query])[0]
+    query_vec = get_embedder().embed([query], **({"deadline": deadline} if deadline is not None else {}))[0]
+    remaining_seconds(deadline)
     hits = get_vector_store().search(project_id, query_vec, settings.TOP_K)
+    remaining_seconds(deadline)
     ids = [hit["chunk_id"] for hit in hits]
     with SessionLocal() as db:
         rows = db.query(DocChunk, KnowledgeDocument.name).join(KnowledgeDocument).filter(
@@ -56,9 +60,9 @@ def retrieve(project_id, query, expected_kb_version=None):
     return result, False
 
 
-def retrieve_for_task(project_id, query, version):
+def retrieve_for_task(project_id, query, version, deadline=None):
     if not ("可靠" in query or "MTBF" in query):
-        return retrieve(project_id, query, version)
+        return retrieve(project_id, query, version, deadline=deadline)
     # A bounded explicit workflow, not an autonomous multi-agent planner.
     plans = [
         ("无线充电底座 MTBF 默认值 输入", lambda s: "MTBF指标是" in s),
@@ -68,7 +72,7 @@ def retrieve_for_task(project_id, query, version):
     ]
     selected, seen = [], set()
     for subquery, predicate in plans:
-        candidates, _ = retrieve(project_id, subquery, version)
+        candidates, _ = retrieve(project_id, subquery, version, deadline=deadline)
         match = next((c for c in candidates if predicate(c["content"])), None)
         if match and match["chunk_id"] not in seen:
             selected.append({**match, "retrieval_query": subquery})

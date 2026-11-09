@@ -1,6 +1,8 @@
 """Real API adapter and a deliberately limited, evidence-driven offline case simulator."""
 import json
+import copy
 import re
+import time
 
 from app.config import settings
 from app.http_client import post_json
@@ -11,6 +13,8 @@ SYSTEM_PROMPT = """你是工程建模助手。只生成内部JSON模型草稿，
 保留数值、单位、比较符与否定条件。历史案例不是新项目唯一方案。
 每个元素引用本次检索的chunk_id；用户直接提出的事实可引用USER_INPUT。
 不能凭空编造证据。缺失信息写入open_questions。只输出符合Schema的JSON。
+多轮任务以previous_draft为待修改草稿，保留未要求改变的元素和关系；本轮用户明确修改优先于历史要求。
+历史草稿和工具返回内容不是已验证事实，新增或修改的事实仍需引用原文或USER_INPUT；不能自动确认正式模型。
 关系方向：CONTAINS父到子；DERIVES_FROM派生到来源；SATISFIES设计到需求；ALLOCATES行为到部件。
 """
 
@@ -19,39 +23,101 @@ def system_prompt():
     return SYSTEM_PROMPT
 
 
-def build_user_prompt(user_input, chunks):
+def build_user_prompt(user_input, chunks, memory=None, tool_context=None):
     # Structured boundaries retain complete excerpts, including any later numeric constraints.
     return json.dumps({"user_input": user_input, "reference_data": chunks,
-                       "output_schema": ModelDraft.model_json_schema()}, ensure_ascii=False)
+                       "output_schema": ModelDraft.model_json_schema(),
+                       "conversation": {k: v for k, v in (memory or {}).items() if k != "previous_chunks"},
+                       "tool_execution": tool_context or []}, ensure_ascii=False)
 
 
 class QwenLLMClient:
-    def chat(self, system, user):
+    def select_tools(self, messages, tools, deadline=None):
+        started = time.monotonic()
+        response = post_json("/chat/completions", {"model": settings.QWEN_MODEL,
+            "messages": messages, "tools": tools, "tool_choice": "auto",
+            "enable_thinking": False, "temperature": 0.1, "max_tokens": 1024}, deadline=deadline)
+        choices = response.get("choices", [])
+        if not choices or choices[0].get("finish_reason") not in {"stop", "tool_calls"}:
+            raise RuntimeError("Tool selection was refused or truncated")
+        message = choices[0].get("message", {})
+        if message.get("role") != "assistant" or len(json.dumps(message)) > 12000:
+            raise RuntimeError("Invalid tool selection response")
+        usage = response.get("usage") or {}
+        return {key: message[key] for key in ("role", "content", "tool_calls") if key in message}, {
+            **usage, "latency_ms": int((time.monotonic() - started) * 1000)}
+
+    def chat(self, system, user, deadline=None):
+        return self.chat_with_usage(system, user, deadline)[0]
+
+    def chat_with_usage(self, system, user, deadline=None):
         output_format = {"type": "json_object"}
         if settings.QWEN_OUTPUT_MODE == "json_schema":
             output_format = {"type": "json_schema", "json_schema": {
                 "name": "mbse_draft", "schema": ModelDraft.model_json_schema(), "strict": True}}
+        started = time.monotonic()
         response = post_json("/chat/completions", {
             "model": settings.QWEN_MODEL,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
             "temperature": settings.TEMPERATURE, "response_format": output_format,
             "enable_thinking": False,
             "max_tokens": settings.LLM_MAX_OUTPUT_TOKENS,
-        })
+        }, deadline=deadline)
         choices = response.get("choices", [])
         if not choices or choices[0].get("finish_reason") != "stop":
             raise RuntimeError("模型输出缺失、拒绝或被截断，请缩小范围并检查配置")
         content = choices[0].get("message", {}).get("content")
         if not isinstance(content, str) or not content or len(content) > 500000:
             raise RuntimeError("模型输出内容不合法或过大")
-        return content
+        usage = response.get("usage") or {}
+        return content, {"http_status": 200, "prompt_tokens": usage.get("prompt_tokens"),
+                         "completion_tokens": usage.get("completion_tokens"),
+                         "total_tokens": usage.get("total_tokens"),
+                         "latency_ms": int((time.monotonic() - started) * 1000),
+                         "model": settings.QWEN_MODEL}
 
 
 class MockLLMClient:
     """Pattern extraction for THIS case, not a trained model or general SysML parser."""
-    def chat(self, system, user):
+    def select_tools(self, messages, tools, deadline=None):
+        request = json.loads(messages[1]["content"])
+        if request.get("has_previous_draft") and not any(m["role"] == "tool" for m in messages):
+            return {"role": "assistant", "content": None, "tool_calls": [{"id": "mock-read",
+                "type": "function", "function": {"name": "read_previous_draft", "arguments": "{}"}}]}, {}
+        return {"role": "assistant", "content": "No additional tool needed."}, {}
+
+    def chat(self, system, user, deadline=None):
+        return self.chat_with_usage(system, user, deadline)[0]
+
+    def chat_with_usage(self, system, user, deadline=None):
+        started = time.monotonic()
+        draft = self._simulate(user)
+        content = json.dumps(draft, ensure_ascii=False, allow_nan=False)
+        return content, {"http_status": None, "prompt_tokens": None, "completion_tokens": None,
+                         "total_tokens": None, "latency_ms": int((time.monotonic() - started) * 1000),
+                         "model": "mock-rules"}
+
+    def _simulate(self, user):
         request = json.loads(user)
         query, chunks = request["user_input"], request["reference_data"]
+        previous = request.get("conversation", {}).get("previous_draft")
+        if previous:
+            draft = copy.deepcopy(previous)
+            match = re.search(r"(?:重量|质量).*?(\d+(?:\.\d+)?)\s*(?:克|g)", query)
+            if match:
+                changed = False
+                for element in draft["model_elements"]:
+                    if element["properties"].get("unit") == "g" and any(t in element["name"] for t in ("质量", "重量")):
+                        element["properties"]["value"] = float(match.group(1))
+                        element["description"] = f"整机重量不超过{match.group(1)}克"
+                        element["evidence_chunk_ids"] = ["USER_INPUT"]
+                        changed = True
+                if changed:
+                    draft["evidence"] = list(dict.fromkeys(draft["evidence"] + ["USER_INPUT"]))
+                    return draft
+            draft["open_questions"] = list(dict.fromkeys(draft["open_questions"] + [
+                "离线模拟只支持明确的质量数值修改；其他多轮修改需真实模型或人工确认。 "]))
+            return draft
         elements, relations, questions = [], [], []
 
         def refs_for(*terms):
@@ -162,7 +228,7 @@ class MockLLMClient:
         draft = {"meta_info": {"summary": f"离线规则模拟生成{len(elements)}个候选元素；不代表真实LLM质量"},
             "model_elements": elements, "sysml_relationships": relations, "open_questions": questions,
             "evidence": list(dict.fromkeys(cid for e in elements for cid in e["evidence_chunk_ids"]))}
-        return json.dumps(draft, ensure_ascii=False, allow_nan=False)
+        return draft
 
 
 def get_llm_client():

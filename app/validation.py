@@ -1,12 +1,51 @@
 import json
 import math
+import re
+import unicodedata
+from decimal import Decimal, InvalidOperation
 
 from pydantic import ValidationError
 
 from app.schemas import ModelDraft
 
 
-def check_draft(value, evidence_ids):
+def _normalize_for_match(text):
+    # 数值对照前归一化：全角数字转ASCII、去空格与千分位逗号、小写。
+    table = {0xFF10 + i: chr(0x30 + i) for i in range(10)}
+    text = str(text).translate(table)
+    return re.sub(r"[\s,，]", "", text).lower()
+
+
+def _check_fact_support(element, evidence_texts, errors, warnings):
+    """证据ID合法不等于内容支持：数值必须能在引用片段原文中找到。"""
+    props = element["properties"]
+    value = props.get("value")
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        return
+    refs = [r for r in element["evidence_chunk_ids"] if r in evidence_texts]
+    if not refs:
+        return
+    number = str(int(value)) if isinstance(value, float) and value.is_integer() else value
+    # Match complete numeric tokens; 2000 is not evidence for 12000 or 2000.5.
+    raw_texts = [unicodedata.normalize("NFKC", str(evidence_texts[r])) for r in refs]
+    corpus = _normalize_for_match(" ".join(raw_texts))
+    value_text = _normalize_for_match(number)
+    tokens = []
+    for text in raw_texts:
+        text = re.sub(r"(?<=\d)[,，](?=\d{3}(?:\D|$))", "", text)
+        for match in re.finditer(r"(?<![\d.])[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?(?![\d.])", text):
+            try:
+                tokens.append(Decimal(match.group()))
+            except InvalidOperation:
+                continue
+    if Decimal(str(value)) not in tokens:
+        errors.append(f"FACT_UNSUPPORTED: {element['localId']}的数值{value_text}未在引用片段原文中出现")
+    unit = props.get("unit")
+    if isinstance(unit, str) and unit and _normalize_for_match(unit) not in corpus:
+        warnings.append(f"UNIT_NOT_FOUND: {element['localId']}的单位{unit}未在引用片段原文出现，请人工复核")
+
+
+def check_draft(value, evidence_ids, evidence_texts=None):
     errors, warnings = [], []
     try:
         json.dumps(value, allow_nan=False)
@@ -35,6 +74,8 @@ def check_draft(value, evidence_ids):
         props = element["properties"]
         if "value" in props and isinstance(props["value"], (int, float)) and not math.isfinite(props["value"]):
             errors.append("VALUE_INVALID: 非有限数值")
+        if evidence_texts:
+            _check_fact_support(element, evidence_texts, errors, warnings)
     if not set(draft["evidence"]) <= allowed:
         errors.append("EVIDENCE_UNKNOWN: 总体来源列表不合法")
     if not {ref for e in draft["model_elements"] for ref in e["evidence_chunk_ids"]} <= set(draft["evidence"]):

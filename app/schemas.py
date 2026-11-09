@@ -51,6 +51,12 @@ class GenerateRequest(BaseModel):
     input_text: str = Field(min_length=2, max_length=12000)
     idempotency_key: str | None = Field(default=None, min_length=1, max_length=128)
     bypass_cache: bool = False
+    conversation_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+    expected_conversation_revision: int | None = Field(default=None, ge=0)
+
+
+class ConversationCreate(BaseModel):
+    project_id: str = Field(pattern=r"^[a-f0-9]{32}$")
 
 
 class DraftUpdate(BaseModel):

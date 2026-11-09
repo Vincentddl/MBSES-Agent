@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, JSON, String, Text, UniqueConstraint
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Index, Integer, JSON, String, Text, UniqueConstraint
 from sqlalchemy.dialects.mysql import LONGTEXT
 
 from app.database import Base
@@ -78,6 +78,8 @@ class GenerationTask(Base):
     calculation = Column(JSON, nullable=True)
     error = Column(Text, nullable=True)
     lease_until = Column(DateTime, nullable=True)
+    lease_token = Column(String(32), nullable=True)
+    execution_deadline_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     finished_at = Column(DateTime, nullable=True)
 
@@ -110,3 +112,38 @@ class ModelRelationship(Base):
     rel_type = Column(String(32), nullable=False)
     source_id = Column(String(32), ForeignKey("model_element.id"), nullable=False)
     target_id = Column(String(32), ForeignKey("model_element.id"), nullable=False)
+
+
+class TaskUsage(Base):
+    """应用级用量台账：每任务每阶段一行，token与成本仅真实模型调用可填。"""
+    __tablename__ = "task_usage"
+    __table_args__ = (Index("ix_usage_task_stage", "task_id", "stage"),)
+    id = Column(String(32), primary_key=True, default=new_id)
+    task_id = Column(String(32), ForeignKey("generation_task.id"), nullable=False, index=True)
+    stage = Column(String(32), nullable=False)
+    backend = Column(String(32), nullable=False)
+    http_status = Column(Integer, nullable=True)
+    prompt_tokens = Column(Integer, nullable=True)
+    completion_tokens = Column(Integer, nullable=True)
+    total_tokens = Column(Integer, nullable=True)
+    latency_ms = Column(Integer, nullable=False, default=0)
+    cost_estimate = Column(Float, nullable=True)
+    detail = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Conversation(Base):
+    __tablename__ = "conversation"
+    id = Column(String(32), primary_key=True, default=new_id)
+    project_id = Column(String(32), ForeignKey("project.id"), nullable=False, index=True)
+    revision = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ConversationTurn(Base):
+    __tablename__ = "conversation_turn"
+    __table_args__ = (UniqueConstraint("conversation_id", "turn_index"),)
+    task_id = Column(String(32), ForeignKey("generation_task.id"), primary_key=True)
+    conversation_id = Column(String(32), ForeignKey("conversation.id"), nullable=False, index=True)
+    turn_index = Column(Integer, nullable=False)
+    context = Column(JSON, nullable=False, default=dict)
