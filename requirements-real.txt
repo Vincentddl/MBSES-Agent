@@ -1,0 +1,5 @@
+-r requirements.txt
+pymysql>=1.1,<2
+cryptography>=43,<47
+redis>=5,<8
+pymilvus>=2.6,<2.7

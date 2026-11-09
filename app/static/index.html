@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>MBSE · 建模审核</title>
+<style>
+:root{--ink:#252c2a;--muted:#65706b;--line:#dce3df;--paper:#fff;--canvas:#f5f7f6;--green:#176448;--soft:#edf5ef;--red:#a23333;--amber:#875c17;--radius:5px;font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--canvas);font-size:14px;letter-spacing:0}
+*{box-sizing:border-box;min-width:0}body{margin:0}button,input,select,textarea{font:inherit;color:inherit;max-width:100%}button,input,select,textarea{border:1px solid #cbd5cf;border-radius:var(--radius);background:#fff}button{min-height:36px;padding:7px 13px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0}button:hover:enabled{background:#f0f4f1;border-color:#99b3a4}button:disabled{opacity:.45;cursor:not-allowed}.primary{background:var(--green);border-color:var(--green);color:white}.primary:hover:enabled{background:#104d36;border-color:#104d36}.icon{width:36px;padding:0;font-size:20px}.danger{color:var(--red)}input,select{min-height:38px;padding:7px 10px}textarea{width:100%;padding:12px;line-height:1.7;resize:vertical;display:block}input[type=file]{width:100%;font-size:12px;padding:8px}input[type=file]::file-selector-button{border:0;background:#edf2ef;color:var(--ink);padding:6px 9px;border-radius:3px;margin-right:10px;cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid #21885d;outline-offset:2px}button:disabled:focus-visible{outline:none}[hidden]{display:none!important}h1,h2,h3,p{margin:0}h1{font-size:19px;font-weight:700}h2{font-size:15px;line-height:1.5}h3{font-size:13px;font-weight:650}label{font-size:13px;font-weight:600;display:block;margin-bottom:7px}small,.muted{color:var(--muted);font-size:12px}.mono{font-family:Consolas,"SFMono-Regular",monospace;font-size:12px}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.spread{justify-content:space-between}.stack{display:grid;gap:13px}.grow{flex:1}.tag{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:4px 8px;background:#eef1ef;border:1px solid #dfe6e1;border-radius:4px;font-size:12px;overflow-wrap:anywhere}.tag.good{background:var(--soft);color:var(--green);border-color:#cce0d2}.tag.bad{background:#fcf0ef;color:var(--red);border-color:#edcfcd}.tag.wait{background:#fbf5e9;color:var(--amber);border-color:#eadcbe}.dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}.header{background:white;border-bottom:1px solid var(--line);padding:18px 28px 13px}.header-main{max-width:1480px;margin:auto;display:flex;gap:24px;align-items:center;flex-wrap:wrap}.brand{display:flex;gap:11px;align-items:center;margin-right:auto}.brand-mark{width:31px;height:31px;background:var(--green);color:#fff;display:grid;place-items:center;border-radius:4px;font-size:12px;font-weight:750}.project-picker{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.project-picker label{margin:0;color:var(--muted);font-weight:400}.project-picker select{width:230px}.backend-bar{max-width:1480px;margin:13px auto 0;display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--muted);align-items:center}.backend-bar b{color:var(--ink);font-weight:500;margin-left:5px}.shell{max-width:1536px;margin:auto;padding:22px 28px 34px}.notice{padding:11px 13px;border:1px solid var(--line);border-left:3px solid var(--green);background:white;line-height:1.6;overflow-wrap:anywhere;margin-bottom:16px}.notice.error{border-left-color:var(--red);color:var(--red)}.notice.warning{border-left-color:var(--amber);color:var(--amber)}.work-grid{display:grid;grid-template-columns:minmax(280px,.82fr) minmax(440px,1.5fr);gap:24px;align-items:start}.column{display:grid;gap:22px}.section{background:white;border:1px solid var(--line);border-radius:0}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}.section-heading{display:flex;align-items:center;gap:9px}.section-index{font-size:11px;color:var(--green);font-weight:700}.section-body{padding:18px}.empty{padding:19px 4px;color:var(--muted);font-size:13px;line-height:1.6}.docs{list-style:none;margin:12px 0 0;padding:0}.doc{border-top:1px solid var(--line);padding:12px 0;display:grid;gap:7px}.doc-title{font-size:13px;font-weight:600;overflow-wrap:anywhere}.doc-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:11px}.parse-info{font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--muted)}#requirement{min-height:195px}#draft{min-height:315px;tab-size:2;font:12px/1.65 Consolas,"Microsoft YaHei",monospace;white-space:pre;overflow-wrap:normal;overflow-x:auto}.field-footer{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap}.task-load{display:flex;gap:7px;flex-wrap:wrap}.task-load input{flex:1;min-width:150px}.task-meta{margin:14px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.task-id{font-size:11px;color:var(--muted);overflow-wrap:anywhere}.subsection{padding:15px 0;border-top:1px solid var(--line)}.subsection:last-child{padding-bottom:0}.sub-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:11px;flex-wrap:wrap}.sources{max-height:340px;overflow:auto}.source{padding:12px 0;border-bottom:1px solid var(--line)}.source:first-child{padding-top:0}.source:last-child{border-bottom:0}.source summary{cursor:pointer;overflow-wrap:anywhere;font-size:13px;font-weight:600;line-height:1.6}.source-meta{font-size:11px;color:var(--muted);margin:7px 0;line-height:1.6;overflow-wrap:anywhere}.source-content{font-size:12px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;border-left:2px solid #c4d9cc;padding-left:12px}.messages{display:grid;gap:7px;margin:10px 0}.message{padding:9px 11px;border-left:2px solid #d5ddda;background:#f7f9f8;font-size:12px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}.message.error{border-color:#bc6c6c;color:var(--red);background:#fcf5f4}.message.warning{border-color:#bd9d59;color:var(--amber);background:#fcf9f1}.actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}.calculation-grid{display:grid;grid-template-columns:minmax(100px,.7fr) minmax(0,1.3fr);margin:0;font-size:12px}.calculation-grid dt,.calculation-grid dd{padding:9px 0;border-bottom:1px solid #edf0ee;white-space:pre-wrap;overflow-wrap:anywhere}.calculation-grid dt{color:var(--muted);padding-right:16px}.calculation-grid dd{margin:0;font-family:Consolas,"Microsoft YaHei",monospace;max-height:260px;overflow:auto}.model-section{margin-top:24px}.tabs{display:flex;gap:0;flex-wrap:wrap;align-items:center}.tab{border:0;border-radius:0;background:transparent;color:var(--muted);padding:8px 14px;min-height:36px;border-bottom:2px solid transparent}.tab[aria-selected=true]{color:var(--green);border-bottom-color:var(--green)}.tab:hover:enabled{background:#f2f6f3}.table-wrap{overflow:auto;max-height:480px}table{border-collapse:collapse;width:100%;font-size:12px;text-align:left}th{background:#f6f8f7;font-weight:600;color:#55615b;position:sticky;top:0;z-index:1}th,td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top;max-width:310px;overflow-wrap:anywhere}td details{min-width:150px}td pre{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.65 Consolas,"Microsoft YaHei",monospace;margin:8px 0 0}td summary{cursor:pointer;color:var(--green)}.graph-wrap{overflow:auto;background:#fcfdfc;max-height:520px}.graph-wrap svg{display:block;width:100%;min-width:560px;min-height:260px}.graph-label{font-family:system-ui,"Microsoft YaHei",sans-serif}.model-meta{padding:10px 18px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}dialog{border:1px solid var(--line);border-radius:6px;padding:0;width:440px;max-width:calc(100% - 30px);box-shadow:0 18px 60px #152c2426}dialog::backdrop{background:#1d2b254d}.dialog-head{padding:18px;border-bottom:1px solid var(--line)}.dialog-body{padding:18px;display:grid;gap:15px}.dialog-body input,.dialog-body textarea{width:100%}.dialog-actions{padding:0 18px 18px;display:flex;gap:8px;justify-content:flex-end}.footer{display:flex;gap:10px;justify-content:space-between;font-size:11px;color:var(--muted);padding:18px 0 0;flex-wrap:wrap}#projectError{color:var(--red);font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}.busy .dot{animation:pulse 1.2s infinite}@keyframes pulse{50%{opacity:.3}}@media(prefers-reduced-motion:reduce){.busy .dot{animation:none}}@media(min-width:1500px){.shell{padding-top:28px}}@media(max-width:900px){.header{padding:16px 18px}.shell{padding:18px}.work-grid{grid-template-columns:minmax(250px,.85fr) minmax(350px,1.2fr);gap:16px}.section-body{padding:14px}.section-head{padding:13px 14px}}@media(max-width:720px){.work-grid{grid-template-columns:1fr}.header-main{gap:14px}.project-picker{width:100%}.project-picker select{flex:1;width:auto;min-width:100px}.backend-bar{gap:8px 13px}.shell{padding:14px 12px 24px}.column{gap:16px}.model-section{margin-top:16px}.task-load input{min-width:120px}.section-body{padding:14px}.actions button{flex:1}.brand{width:100%}h1{font-size:18px}#draft{min-height:300px}.section-head .row{gap:5px}.tab{padding:8px 10px}.field-footer .primary{margin-left:auto}}
+#calculation table{min-width:740px}#calculation th,#calculation td{white-space:normal}#panel-elements table{min-width:760px}#panel-relations table{min-width:680px}
+</style>
+<style>
+.file-control{position:relative;display:flex;align-items:center;gap:10px;border:1px solid #cbd5cf;border-radius:5px;padding:8px;min-height:44px}.file-control input[type=file]{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.file-control:focus-within{outline:2px solid #21885d;outline-offset:2px}.file-button{background:#edf2ef;padding:5px 9px;font-size:12px;flex:none;border-radius:3px}.file-name{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.notice{white-space:pre-wrap}.graph-wrap svg{max-width:none}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-main">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">M</span><h1>MBSE 建模审核</h1><span class="tag" id="mode">模式未获取</span></div>
+    <div class="project-picker"><label for="project">项目</label><select id="project" aria-label="当前项目"><option value="">正在加载项目…</option></select><button id="newProject" type="button">＋ 新项目</button><button id="refresh" class="icon" title="刷新项目数据与后端状态" aria-label="刷新项目数据与后端状态" type="button">↻</button></div>
+  </div>
+  <div class="backend-bar" id="backends"><span id="connection">连接中…</span></div>
+</header>
+<main class="shell">
+  <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+  <div class="work-grid">
+    <div class="column">
+      <section class="section" aria-labelledby="docsTitle">
+        <div class="section-head"><div class="section-heading"><span class="section-index">01</span><h2 id="docsTitle">项目文档</h2></div><span class="muted" id="docCount">尚未加载</span></div>
+        <div class="section-body">
+          <form id="uploadForm"><label for="file">上传文档</label><div class="file-control"><input id="file" type="file" accept=".docx,.pdf,.md,.txt" multiple disabled><span class="file-button" aria-hidden="true">选择文档</span><span class="file-name" id="fileName" aria-hidden="true">未选择文件</span></div><div class="field-footer"><span class="muted" id="uploadStatus">DOCX / PDF / MD / TXT</span><button id="upload" type="submit" disabled>上传</button></div></form>
+          <ul class="docs" id="documents"><li class="empty">未选择项目</li></ul>
+        </div>
+      </section>
+      <section class="section" aria-labelledby="inputTitle">
+        <div class="section-head"><div class="section-heading"><span class="section-index">02</span><h2 id="inputTitle">建模需求</h2></div></div>
+        <div class="section-body"><form id="generateForm"><label for="requirement">需求原文</label><textarea id="requirement" placeholder="输入本次建模需求…" disabled></textarea><div class="field-footer"><span class="muted" id="inputCount">0 字</span><button type="submit" class="primary" id="generate" disabled>生成模型草稿</button></div></form></div>
+      </section>
+    </div>
+    <div class="column">
+      <section class="section" aria-labelledby="reviewTitle">
+        <div class="section-head"><div class="section-heading"><span class="section-index">03</span><h2 id="reviewTitle">任务审核</h2></div><span class="tag" id="taskStatus">无任务</span></div>
+        <div class="section-body">
+          <form id="taskForm"><label for="taskId">已有任务 ID</label><div class="task-load"><input id="taskId" type="text" autocomplete="off" placeholder="输入任务 ID" disabled><button type="submit" id="loadTask" disabled>加载</button><button type="button" id="syncTask" class="icon" title="刷新当前任务 / 恢复轮询" aria-label="刷新当前任务或恢复轮询" disabled>↻</button></div></form>
+          <div class="task-meta"><span class="task-id" id="taskMeta">未加载任务</span><span class="tag good" id="cacheHit" hidden>缓存命中</span><span class="muted" id="pollStatus"></span></div>
+          <div id="taskError" class="message error" role="alert" hidden></div>
+          <div class="subsection"><div class="sub-head"><h3>原文来源片段</h3><span class="muted" id="sourceCount">未返回</span></div><div class="sources" id="sources"><p class="empty">暂无来源片段</p></div></div>
+          <div class="subsection"><div class="sub-head"><label for="draft" style="margin:0">JSON 草稿</label><span class="muted" id="draftState">未加载</span></div><textarea id="draft" aria-label="可编辑完整 JSON 草稿" spellcheck="false" placeholder="暂无草稿" disabled></textarea><div id="validationMessages" class="messages" aria-live="polite"></div><div class="actions"><button id="validate" type="button" disabled>重新校验</button><button id="confirm" type="button" class="primary" disabled>人工确认</button></div></div>
+          <div class="subsection"><div class="sub-head"><h3>可靠度结果</h3><span class="muted" id="calculationStatus">未返回</span></div><div id="calculation"><p class="empty">暂无计算结果</p></div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <section class="section model-section" aria-labelledby="modelTitle">
+    <div class="section-head"><div class="section-heading"><span class="section-index">04</span><h2 id="modelTitle">已确认模型</h2></div><div class="tabs" role="tablist" aria-label="模型视图"><button type="button" class="tab" id="tab-graph" role="tab" aria-selected="true" aria-controls="panel-graph" data-view="graph">拓扑</button><button type="button" class="tab" id="tab-elements" role="tab" aria-selected="false" aria-controls="panel-elements" data-view="elements" tabindex="-1">元素</button><button type="button" class="tab" id="tab-relations" role="tab" aria-selected="false" aria-controls="panel-relations" data-view="relations" tabindex="-1">关系</button></div></div>
+    <div class="model-meta" id="modelMeta">未选择项目</div>
+    <div id="panel-graph" role="tabpanel" aria-labelledby="tab-graph" class="graph-wrap"><p class="empty" style="padding:24px">暂无已确认模型</p></div>
+    <div id="panel-elements" role="tabpanel" aria-labelledby="tab-elements" class="table-wrap" hidden><table><thead><tr><th scope="col">名称 / ID</th><th scope="col">类型</th><th scope="col">命名空间</th><th scope="col">描述</th><th scope="col">属性与证据</th></tr></thead><tbody id="elementsBody"></tbody></table></div>
+    <div id="panel-relations" role="tabpanel" aria-labelledby="tab-relations" class="table-wrap" hidden><table><thead><tr><th scope="col">关系 ID</th><th scope="col">关系类型</th><th scope="col">源元素</th><th scope="col">目标元素</th></tr></thead><tbody id="relationsBody"></tbody></table></div>
+  </section>
+  <footer class="footer"><span>MBSES / 本地建模工作台</span><span id="lastSync">尚未同步</span></footer>
+</main>
+<dialog id="projectDialog" aria-labelledby="dialogTitle"><form id="projectForm"><div class="dialog-head"><h2 id="dialogTitle">新建项目</h2></div><div class="dialog-body"><div><label for="projectName">项目名称</label><input id="projectName" required maxlength="128" autocomplete="off"></div><div><label for="projectDescription">项目描述</label><textarea id="projectDescription" rows="3"></textarea></div><p id="projectError" role="alert" hidden></p></div><div class="dialog-actions"><button type="button" id="cancelProject">取消</button><button type="submit" id="createProject" class="primary">创建项目</button></div></form></dialog>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const ACTIVE = new Set(['PENDING','RUNNING']);
+const REVIEW = new Set(['READY_FOR_REVIEW','NEEDS_INPUT','NEEDS_REVIEW']);
+const STATUS = {PENDING:'等待执行',RUNNING:'正在生成',READY_FOR_REVIEW:'待人工审核',NEEDS_INPUT:'待补充输入',NEEDS_REVIEW:'需要复核',FAILED:'任务失败',CONFIRMED:'已确认'};
+const state = {project:'',projectEpoch:0,taskEpoch:0,task:null,dirty:false,validated:false,calculationStale:false,busy:false,uploading:false,generating:false,loading:false,timer:null,pollStart:0,pollFailures:0,pollCount:0,key:null,modelRequest:0,docsRequest:0};
+function node(tag,text,cls){const el=document.createElement(tag);if(text!==undefined&&text!==null)el.textContent=String(text);if(cls)el.className=cls;return el;}
+function display(value){if(value===null||value===undefined)return '未返回';return typeof value==='object'?JSON.stringify(value,null,2):String(value);}
+function notify(message,type=''){const el=$('notice');el.textContent=message;el.className='notice'+(type?' '+type:'');el.hidden=!message;}
+function storageGet(key){try{return localStorage.getItem('mbses:'+key)||'';}catch{return '';}}
+function storageSet(key,value){try{localStorage.setItem('mbses:'+key,value);}catch{}}
+function taskPath(id){return '/api/tasks/'+encodeURIComponent(id);}
+async function api(path,options={}){
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),30000);
+  const config={...options,signal:controller.signal,headers:{Accept:'application/json',...options.headers}};
+  if(config.body&&!(config.body instanceof FormData)){config.headers['Content-Type']='application/json';config.body=JSON.stringify(config.body);}
+  try{const response=await fetch(path,config);const raw=await response.text();let data;
+    try{data=raw?JSON.parse(raw):null;}catch{if(response.ok)throw new Error('接口未返回 JSON：'+path);data=null;}
+    if(!response.ok){const err=new Error('HTTP '+response.status+' · '+(data?.detail!==undefined?display(data.detail):raw.slice(0,500)||response.statusText));err.status=response.status;throw err;}
+    return data;
+  }catch(err){if(err.name==='AbortError')throw new Error('请求超时；操作结果可能已写入，请刷新核对。');if(err instanceof TypeError)throw new Error('无法连接后端，请检查服务与同源访问地址。');throw err;}finally{clearTimeout(timeout);}
+}
+function stopPolling(){clearTimeout(state.timer);state.timer=null;}
+function locked(){return state.busy||state.generating||state.loading;}
+function updateControls(){
+  const hasProject=!!state.project;const running=ACTIVE.has(state.task?.status);const edit=state.task&&REVIEW.has(state.task.status)&&state.task.result_json!==null&&typeof state.task.result_json==='object';const revision=Number.isInteger(state.task?.revision);
+  $('project').disabled=locked()||state.uploading;$('newProject').disabled=locked()||state.uploading;$('refresh').disabled=locked()||state.uploading;
+  $('file').disabled=!hasProject||state.uploading;$('upload').disabled=!hasProject||!$('file').files.length||state.uploading;
+  $('requirement').disabled=!hasProject||state.generating||running;
+  $('generate').disabled=!hasProject||locked()||running||$('requirement').value.trim().length<2;
+  $('generate').textContent=state.generating?'正在提交…':running?'正在生成…':'生成模型草稿';
+  $('taskId').disabled=!hasProject||locked();$('loadTask').disabled=!hasProject||locked()||!$('taskId').value.trim();$('syncTask').disabled=!state.task||locked();
+  $('draft').disabled=!edit||locked();$('validate').disabled=!edit||!revision||locked();
+  $('confirm').disabled=!state.validated||state.dirty||!revision||locked()||state.task?.status!=='READY_FOR_REVIEW'||!!state.task?.validation_errors?.length;
+}
+function addMessage(text,type=''){const el=node('div',text,'message'+(type?' '+type:''));$('validationMessages').append(el);}
+function renderValidation(){
+  $('validationMessages').replaceChildren();const task=state.task;if(!task)return;
+  if(task.result_json!==null&&task.result_json!==undefined&&!Number.isInteger(task.revision))addMessage('后端未返回 revision，已禁用校验与确认。','warning');
+  (Array.isArray(task.validation_errors)?task.validation_errors:[]).forEach(x=>addMessage(display(x),'error'));
+  (Array.isArray(task.warnings)?task.warnings:[]).forEach(x=>addMessage(display(x),'warning'));
+  if(task.status==='NEEDS_INPUT')addMessage('此任务需要补充输入，请核对问题与来源后修改草稿或发起新任务。','warning');
+  if(state.validated)addMessage('草稿已通过校验，修订 '+task.revision+'。');
+}
+function renderSources(task){
+  const chunks=task.retrieved_chunks??task.result_json?.retrieved_chunks;const root=$('sources');root.replaceChildren();
+  if(!Array.isArray(chunks)){root.append(node('p','后端未返回来源片段','empty'));$('sourceCount').textContent='未返回';return;}
+  $('sourceCount').textContent=chunks.length+' 个片段';
+  if(!chunks.length){root.append(node('p','本任务未检索到来源片段','empty'));return;}
+  chunks.forEach((c,i)=>{const item=node('details',null,'source');item.open=i===0;item.append(node('summary',c.section_title||c.document_name||c.chunk_id||'来源片段'));
+    const metadata=[c.document_name,c.source_locator!==undefined?display(c.source_locator):null,c.chunk_id?'片段 '+c.chunk_id:null,typeof c.score==='number'?'检索分数 '+c.score:null].filter(Boolean);
+    item.append(node('div',metadata.join(' · '),'source-meta'),node('div',typeof c.content==='string'?c.content:'原文内容未返回','source-content'));root.append(item);});
+}
+const CALC_LABELS={reliability:'可靠度',system_reliability:'系统可靠度',task_hours:'任务时间（小时）',threshold:'可靠度阈值',operator:'判定运算符',passed:'是否通过',note:'计算说明',mission_time:'任务时间',mission_time_hours:'任务时间（小时）',time_hours:'时间（小时）',method:'计算方法',model:'模型',status:'状态',warnings:'警告',errors:'错误',components:'部件',units:'单位',unit:'单位',formula:'公式',assumptions:'假设',result:'计算结果',failure_rate:'失效率',mtbf:'平均故障间隔',calculated_at:'计算时间'};
+function renderCalculation(task){
+  const calc=task.calculation??task.result_json?.calculation??task.result?.calculation;const root=$('calculation');root.replaceChildren();
+  if(state.calculationStale){$('calculationStatus').textContent='待刷新';root.append(node('p','草稿已修改，计算结果待服务端刷新','empty'));return;}
+  if(calc===null||calc===undefined){$('calculationStatus').textContent='未返回';root.append(node('p','暂无计算结果','empty'));return;}
+  $('calculationStatus').textContent='后端计算结果';const entries=typeof calc==='object'&&!Array.isArray(calc)?Object.entries(calc):[['result',calc]];
+  if(!entries.length){root.append(node('p','计算结果为空','empty'));return;}const list=node('dl',null,'calculation-grid');
+  entries.filter(([key,value])=>key!=='components'||!Array.isArray(value)).forEach(([key,value])=>{list.append(node('dt',CALC_LABELS[key]||key),node('dd',key==='passed'&&typeof value==='boolean'?(value?'通过':'未通过'):display(value)));});root.append(list);
+  if(Array.isArray(calc.components)){const wrap=node('div',null,'table-wrap');const table=node('table');const head=node('thead');const row=node('tr');['部件','MTBF（小时）','失效率（每小时）','可靠度','证据'].forEach(label=>{const th=node('th',label);th.scope='col';row.append(th);});head.append(row);const body=node('tbody');calc.components.forEach(component=>{const tr=node('tr');[component.name,component.mtbf_hours,component.failure_rate_per_hour,component.reliability,component.evidence_chunk_ids].forEach(value=>tr.append(node('td',display(value))));body.append(tr);});table.append(head,body);wrap.append(table);root.append(wrap);}
+}
+function renderTask(task,{keepDraft=false}={}){
+  state.task=task;$('taskId').value=task.id;$('taskStatus').textContent=STATUS[task.status]||task.status||'状态未返回';
+  $('taskStatus').className='tag '+(ACTIVE.has(task.status)?'wait busy':task.status==='FAILED'?'bad':task.status==='CONFIRMED'?'good':'');
+  $('taskMeta').textContent='ID '+task.id+(Number.isInteger(task.revision)?' · 修订 '+task.revision:'');$('cacheHit').hidden=task.cache_hit!==true;
+  $('taskError').hidden=!task.error;$('taskError').textContent=task.error?display(task.error):'';
+  if(!keepDraft){$('draft').value=task.result_json!==null&&task.result_json!==undefined?display(task.result_json):'';$('draft').scrollTop=0;$('draft').scrollLeft=0;state.dirty=false;state.validated=false;state.calculationStale=false;}
+  $('draftState').textContent=task.status==='CONFIRMED'?'已确认，只读':state.dirty?'已编辑，待校验':state.validated?'校验通过':'服务端草稿';
+  if(task.result_json===null||task.result_json===undefined)$('draftState').textContent='暂无草稿';
+  renderValidation();renderSources(task);renderCalculation(task);updateControls();
+}
+function clearTask(){stopPolling();state.taskEpoch++;state.task=null;state.dirty=false;state.validated=false;state.calculationStale=false;$('taskId').value='';$('taskStatus').textContent='无任务';$('taskStatus').className='tag';$('taskMeta').textContent='未加载任务';$('pollStatus').textContent='';$('draft').value='';$('draftState').textContent='未加载';$('cacheHit').hidden=true;$('taskError').hidden=true;$('validationMessages').replaceChildren();$('sources').replaceChildren(node('p','暂无来源片段','empty'));$('sourceCount').textContent='未返回';renderCalculation({});updateControls();}
+async function pollTask(id,epoch){
+  if(epoch!==state.taskEpoch)return;
+  if(Date.now()-state.pollStart>15*60*1000||state.pollCount>=300){$('pollStatus').textContent='轮询已超时，可手动刷新';updateControls();return;}
+  try{state.pollCount++;const task=await api(taskPath(id));if(epoch!==state.taskEpoch)return;
+    if(!task||task.id!==id)throw new Error('任务响应 ID 不匹配');
+    state.pollFailures=0;renderTask(task);storageSet('task:'+state.project,id);
+    if(ACTIVE.has(task.status)){$('pollStatus').textContent='每 3 秒同步';state.timer=setTimeout(()=>pollTask(id,epoch),3000);}
+    else{$('pollStatus').textContent='轮询已结束';if(!STATUS[task.status])notify('后端返回未约定状态 '+display(task.status)+'，已停止轮询。','warning');if(task.status==='CONFIRMED')loadModel(state.project,state.projectEpoch);}
+  }catch(err){if(epoch!==state.taskEpoch)return;state.pollFailures++;if(err.status===404||err.status===422||state.pollFailures>=3){$('pollStatus').textContent='轮询已停止';notify(err.message+' 请手动刷新任务。','error');}else{$('pollStatus').textContent='连接失败，正在重试（'+state.pollFailures+'/3）';state.timer=setTimeout(()=>pollTask(id,epoch),5000);}updateControls();}
+}
+function discardOkay(){return !state.dirty||window.confirm('草稿有未校验的修改，放弃这些修改？');}
+async function loadTask(id,{ask=true}={}){
+  id=id.trim();if(!id||!state.project||locked())return;if(ask&&!discardOkay())return;
+  stopPolling();const epoch=++state.taskEpoch;state.loading=true;state.validated=false;renderValidation();$('pollStatus').textContent='正在加载…';updateControls();
+  try{const task=await api(taskPath(id));if(epoch!==state.taskEpoch)return;if(!task||task.id!==id)throw new Error('任务响应 ID 不匹配');if(task.project_id&&task.project_id!==state.project)throw new Error('该任务不属于当前项目，请先切换项目。');
+    renderTask(task);if(typeof task.input_text==='string')$('requirement').value=task.input_text;updateInputCount();storageSet('task:'+state.project,id);state.pollStart=Date.now();state.pollCount=0;state.pollFailures=0;
+    if(ACTIVE.has(task.status)){$('pollStatus').textContent='每 3 秒同步';state.timer=setTimeout(()=>pollTask(id,epoch),3000);}else{$('pollStatus').textContent='已同步';if(!STATUS[task.status])notify('后端返回未约定状态 '+display(task.status)+'，未启动轮询。','warning');if(task.status==='CONFIRMED')loadModel(state.project,state.projectEpoch);}
+  }catch(err){if(epoch===state.taskEpoch){$('pollStatus').textContent='加载失败';notify(err.message,'error');}}
+  finally{if(epoch===state.taskEpoch){state.loading=false;updateControls();}}
+}
+function updateInputCount(){$('inputCount').textContent=$('requirement').value.length+' 字';updateControls();}
+async function loadHealth(){
+  try{const data=await api('/api/health');$('backends').replaceChildren(node('span','后端已连接'));$('mode').textContent=data.mode!==undefined?display(data.mode):'模式未返回';$('mode').className='tag '+(data.backends?.llm==='qwen'&&(!data.model_configuration?.api_key_present||!data.model_configuration?.paid_calls_enabled)?'wait':'good');
+    const labels={llm:'LLM',embedding:'Embedding',vector_store:'向量库',cache:'缓存',database:'数据库'};Object.entries(labels).forEach(([key,title])=>{const span=node('span',title);span.append(node('b',display(data.backends?.[key])));$('backends').append(span);});
+  }catch(err){$('backends').replaceChildren(node('span',err.message,'danger'));$('mode').textContent='连接异常';$('mode').className='tag bad';}
+}
+function renderDocuments(docs){const root=$('documents');root.replaceChildren();$('docCount').textContent=docs.length+' 份文档';if(!docs.length){root.append(node('li','暂无项目文档','empty'));return;}
+  docs.forEach(doc=>{const item=node('li',null,'doc');item.append(node('div',doc.name||doc.id,'doc-title'));const meta=node('div',null,'doc-meta');meta.append(node('span',doc.status||'状态未返回','tag'),node('span',Number.isInteger(doc.chunk_count)?doc.chunk_count+' 个片段':'片段数未返回'));item.append(meta);if(doc.parse_info!==null&&doc.parse_info!==undefined)item.append(node('div',display(doc.parse_info),'parse-info'));root.append(item);});}
+async function loadDocuments(pid,epoch){const req=++state.docsRequest;try{const docs=await api('/api/knowledge/'+encodeURIComponent(pid));if(epoch!==state.projectEpoch||req!==state.docsRequest)return;if(!Array.isArray(docs))throw new Error('文档列表格式不正确');renderDocuments(docs);}catch(err){if(epoch===state.projectEpoch&&req===state.docsRequest){$('docCount').textContent='加载失败';$('documents').replaceChildren(node('li',err.message,'empty danger'));}}}
+function emptyTable(root,cols,text){const tr=node('tr');const td=node('td',text,'empty');td.colSpan=cols;tr.append(td);root.append(tr);}
+function renderModel(data){
+  const all=Array.isArray(data.elements)?data.elements:[];const elements=all.filter(e=>e.status==='CONFIRMED');const ids=new Set(elements.map(e=>e.id));const names=new Map(elements.map(e=>[e.id,e.name||e.id]));const relations=(Array.isArray(data.relations)?data.relations:[]).filter(r=>ids.has(r.source_id)&&ids.has(r.target_id));
+  $('modelMeta').textContent=elements.length+' 个已确认元素 · '+relations.length+' 条关系';const eb=$('elementsBody');const rb=$('relationsBody');eb.replaceChildren();rb.replaceChildren();
+  if(!elements.length)emptyTable(eb,5,'暂无已确认元素');
+  elements.forEach(e=>{const tr=node('tr');const name=node('td');name.append(node('div',e.name||'未命名'),node('div',e.id,'muted mono'));const info=node('td');const details=node('details');details.append(node('summary','属性与证据'),node('pre',display({properties:e.properties,evidence_chunk_ids:e.evidence_chunk_ids,task_id:e.task_id})));info.append(details);tr.append(name,node('td',e.kind),node('td',e.namespace||'—'),node('td',e.description||'—'),info);eb.append(tr);});
+  if(!relations.length)emptyTable(rb,4,'暂无已确认关系');relations.forEach(r=>{const tr=node('tr');tr.append(node('td',r.id,'mono'),node('td',r.rel_type),node('td',names.get(r.source_id)),node('td',names.get(r.target_id)));rb.append(tr);});
+  renderGraph(elements,relations);$('lastSync').textContent='模型同步于 '+new Date().toLocaleTimeString('zh-CN');
+}
+function svgNode(tag,attrs={},text){const el=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,String(v)));if(text!==undefined)el.textContent=String(text);return el;}
+function renderGraph(elements,relations){
+  const root=$('panel-graph');root.replaceChildren();if(!elements.length){root.append(node('p','暂无已确认模型','empty'));return;}
+  const columns=Math.max(2,Math.min(4,Math.ceil(Math.sqrt(elements.length))));const rows=Math.ceil(elements.length/columns);const width=columns*300+48;const height=Math.max(260,rows*150+48);const svg=svgNode('svg',{viewBox:'0 0 '+width+' '+height,role:'img','aria-label':'已确认模型拓扑：'+elements.length+' 个元素，'+relations.length+' 条关系',style:'width:'+width+'px;min-width:100%;height:'+height+'px'});
+  const defs=svgNode('defs');const marker=svgNode('marker',{id:'model-arrow',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'});marker.append(svgNode('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:'#7d9386'}));defs.append(marker);svg.append(defs);const positions=new Map(elements.map((e,i)=>[e.id,{x:24+(i%columns)*300,y:40+Math.floor(i/columns)*150}]));
+  relations.forEach((r,i)=>{const a=positions.get(r.source_id),b=positions.get(r.target_id);const self=r.source_id===r.target_id;
+    const dx=b.x-a.x,dy=b.y-a.y;const factor=self?0:1/Math.max(Math.abs(dx)/105,Math.abs(dy)/34);const sx=a.x+105+dx*factor,sy=a.y+34+dy*factor,tx=b.x+105-dx*factor,ty=b.y+34-dy*factor;
+    const path=svgNode('path',{d:self?'M '+(a.x+180)+' '+a.y+' c 55 -40 95 100 30 52':'M '+sx+' '+sy+' L '+tx+' '+ty,fill:'none',stroke:'#94a99b','stroke-width':1.5,'marker-end':'url(#model-arrow)'});path.append(svgNode('title',{},r.rel_type+' · '+r.source_id+' → '+r.target_id));svg.append(path);
+    const label=svgNode('text',{x:self?a.x+244:(sx+tx)/2,y:self?a.y+10:(sy+ty)/2-8-(i%2)*12,'text-anchor':'middle',fill:'#52665a','font-size':10,class:'graph-label'});label.textContent=String(r.rel_type||'').slice(0,16);svg.append(label);});
+  elements.forEach(e=>{const p=positions.get(e.id);const group=svgNode('g');group.append(svgNode('title',{},[e.name,e.kind,e.id,e.description].filter(Boolean).join('\n')),svgNode('rect',{x:p.x,y:p.y,width:210,height:68,rx:4,fill:'#fff',stroke:'#a8c7b3'}),svgNode('rect',{x:p.x,y:p.y,width:4,height:68,fill:'#28724e'}));
+    const name=String(e.name||e.id),kind=String(e.kind||'');group.append(svgNode('text',{x:p.x+14,y:p.y+27,fill:'#243a2d','font-size':13,class:'graph-label'},name.length>14?name.slice(0,13)+'…':name),svgNode('text',{x:p.x+14,y:p.y+49,fill:'#6b7d72','font-size':10,class:'graph-label'},kind.length>18?kind.slice(0,17)+'…':kind));svg.append(group);});root.append(svg);
+}
+async function loadModel(pid,epoch){const req=++state.modelRequest;try{const data=await api('/api/elements/'+encodeURIComponent(pid));if(epoch!==state.projectEpoch||req!==state.modelRequest)return;if(!data||!Array.isArray(data.elements)||!Array.isArray(data.relations))throw new Error('模型数据格式不正确');renderModel(data);}catch(err){if(epoch===state.projectEpoch&&req===state.modelRequest){$('modelMeta').textContent='模型加载失败：'+err.message;}}}
+async function selectProject(pid,{restore=true}={}){
+  clearTask();state.loading=false;state.project=pid;const epoch=++state.projectEpoch;state.key=null;notify('');$('requirement').value='';updateInputCount();$('file').value='';$('fileName').textContent='未选择文件';$('uploadStatus').textContent='DOCX / PDF / MD / TXT';renderModel({elements:[],relations:[]});$('lastSync').textContent='尚未同步';
+  if(!pid){$('documents').replaceChildren(node('li','请先新建项目','empty'));$('docCount').textContent='未选择项目';$('modelMeta').textContent='未选择项目';updateControls();return;}
+  storageSet('project',pid);$('docCount').textContent='加载中…';$('documents').replaceChildren(node('li','正在加载文档…','empty'));$('modelMeta').textContent='正在加载模型…';updateControls();
+  await Promise.all([loadDocuments(pid,epoch),loadModel(pid,epoch)]);if(epoch!==state.projectEpoch)return;
+  const params=new URLSearchParams(location.search);const linked=params.get('project')===pid?params.get('task'):'';
+  const id=restore?(linked||storageGet('task:'+pid)):'';if(id)await loadTask(id,{ask:false});
+}
+async function loadProjects(){const projects=await api('/api/projects');if(!Array.isArray(projects))throw new Error('项目列表格式不正确');const previous=state.project||new URLSearchParams(location.search).get('project')||storageGet('project');$('project').replaceChildren();projects.forEach(p=>{const option=node('option',p.name||p.id);option.value=p.id;$('project').append(option);});if(!projects.length){const option=node('option','暂无项目');option.value='';$('project').append(option);}const pid=projects.some(p=>p.id===previous)?previous:projects[0]?.id||'';$('project').value=pid;await selectProject(pid);}
+$('project').addEventListener('change',()=>{const pid=$('project').value;if(!discardOkay()){$('project').value=state.project;return;}selectProject(pid);});
+$('refresh').addEventListener('click',async()=>{if(!discardOkay())return;await loadHealth();try{await loadProjects();}catch(err){notify(err.message,'error');}});
+$('requirement').addEventListener('input',()=>{state.key=null;updateInputCount();});$('taskId').addEventListener('input',updateControls);$('file').addEventListener('change',()=>{const files=Array.from($('file').files);$('fileName').textContent=files.length?files.map(file=>file.name).join('、'):'未选择文件';updateControls();});
+$('taskForm').addEventListener('submit',event=>{event.preventDefault();loadTask($('taskId').value);});$('syncTask').addEventListener('click',()=>{if(state.task)loadTask(state.task.id);});
+$('uploadForm').addEventListener('submit',async event=>{
+  event.preventDefault();if(state.uploading||!state.project)return;const files=Array.from($('file').files);if(!files.length)return;const pid=state.project,epoch=state.projectEpoch;state.uploading=true;updateControls();let passed=0;const failures=[];
+  for(let i=0;i<files.length;i++){const file=files[i];$('uploadStatus').textContent='正在上传 '+(i+1)+'/'+files.length+' · '+file.name;if(!/\.(docx|pdf|md|txt)$/i.test(file.name)){failures.push(file.name+'：不支持的文件类型');continue;}
+    try{const body=new FormData();body.append('project_id',pid);body.append('file',file);const result=await api('/api/knowledge/upload',{method:'POST',body});if(!result?.document_id)throw new Error('未返回 document_id');passed++;}catch(err){failures.push(file.name+'：'+err.message);}}
+  state.uploading=false;$('file').value='';$('fileName').textContent='未选择文件';$('uploadStatus').textContent='上传结束 · '+passed+'/'+files.length+' 成功';if(epoch===state.projectEpoch){await loadDocuments(pid,epoch);notify(failures.length?failures.join('\n'):'文档已上传。',failures.length?'error':'');}updateControls();
+});
+$('generateForm').addEventListener('submit',async event=>{
+  event.preventDefault();if($('generate').disabled||!discardOkay())return;const pid=state.project,epoch=state.projectEpoch;const input=$('requirement').value.trim();state.generating=true;stopPolling();state.key=state.key||((window.crypto?.randomUUID?.())||'web-'+Date.now()+'-'+Math.random().toString(36).slice(2));notify('');updateControls();
+  let id;try{const result=await api('/api/generate',{method:'POST',body:{project_id:pid,input_text:input,idempotency_key:state.key,bypass_cache:false}});if(!result?.task_id)throw new Error('生成接口未返回 task_id');id=result.task_id;state.key=null;if(epoch===state.projectEpoch){clearTask();$('taskId').value=id;storageSet('task:'+pid,id);}}
+  catch(err){if(epoch===state.projectEpoch)notify(err.message,'error');}finally{state.generating=false;updateControls();}
+  if(id&&epoch===state.projectEpoch)await loadTask(id,{ask:false});
+});
+$('draft').addEventListener('input',()=>{state.dirty=true;state.validated=false;state.calculationStale=true;renderCalculation(state.task||{});$('draftState').textContent='已编辑，待校验';$('validationMessages').replaceChildren();updateControls();});
+$('validate').addEventListener('click',async()=>{
+  if($('validate').disabled)return;let draft;try{draft=JSON.parse($('draft').value);if(!draft||typeof draft!=='object'||Array.isArray(draft))throw new Error('草稿必须是 JSON 对象');}catch(err){$('validationMessages').replaceChildren();addMessage('JSON 解析失败：'+err.message,'error');return;}
+  const task=state.task,epoch=state.taskEpoch;state.busy=true;state.validated=false;updateControls();notify('');
+  try{const result=await api(taskPath(task.id)+'/validate',{method:'POST',body:{draft,expected_revision:task.revision}});if(epoch!==state.taskEpoch)return;if(!Number.isInteger(result?.revision)||typeof result?.valid!=='boolean')throw new Error('校验响应缺少 valid 或 revision');
+    state.validated=result.valid&&!(result.errors?.length);state.dirty=!result.valid&&result.revision===task.revision;renderTask({...task,result_json:draft,revision:result.revision,status:result.status||task.status,validation_errors:result.errors||[],warnings:result.warnings||[]},{keepDraft:true});
+    if(!result.valid&&!result.errors?.length)addMessage('后端校验未通过，请检查草稿。','error');
+    if(result.revision!==task.revision){
+      const fresh=await api(taskPath(task.id));if(epoch!==state.taskEpoch)return;
+      if(fresh?.id!==task.id||fresh.revision!==result.revision){state.validated=false;addMessage('服务端修订已发生变化，请刷新任务后重新校验。','warning');}
+      else{const valid=state.validated;renderTask(fresh);state.validated=valid&&fresh.status==='READY_FOR_REVIEW'&&!fresh.validation_errors?.length;$('draftState').textContent=state.validated?'校验通过':'服务端草稿';renderValidation();}
+    }
+  }catch(err){if(epoch===state.taskEpoch){state.validated=false;$('validationMessages').replaceChildren();addMessage(err.message,'error');if(err.status===409)addMessage('修订号冲突。请保留需要的修改后，刷新任务以获取最新修订。','warning');}}
+  finally{state.busy=false;updateControls();}
+});
+$('confirm').addEventListener('click',async()=>{
+  if($('confirm').disabled)return;if(!window.confirm('确认将当前已校验草稿写入正式模型？'))return;const task=state.task,epoch=state.taskEpoch;state.busy=true;updateControls();notify('');let confirmed=false;
+  try{const result=await api(taskPath(task.id)+'/confirm',{method:'POST',body:{expected_revision:task.revision}});if(epoch!==state.taskEpoch)return;if(result?.status!=='CONFIRMED')throw new Error('确认接口未返回 CONFIRMED 状态，请刷新任务核对。');confirmed=true;state.validated=false;renderTask({...task,status:'CONFIRMED'},{keepDraft:true});notify('模型已确认。');await loadModel(state.project,state.projectEpoch);}
+  catch(err){if(epoch===state.taskEpoch){state.validated=false;notify(err.message+(err.status===409?' 请刷新任务并重新校验。':''),'error');}}
+  finally{state.busy=false;updateControls();}if(confirmed)await loadTask(task.id,{ask:false});
+});
+$('newProject').addEventListener('click',()=>{$('projectForm').reset();$('projectError').hidden=true;$('projectDialog').showModal();$('projectName').focus();});$('cancelProject').addEventListener('click',()=>$('projectDialog').close());
+$('projectForm').addEventListener('submit',async event=>{
+  event.preventDefault();const name=$('projectName').value.trim();if(!name||$('createProject').disabled)return;if(!discardOkay())return;$('createProject').disabled=true;$('cancelProject').disabled=true;$('projectError').hidden=true;
+  try{const project=await api('/api/projects',{method:'POST',body:{name,description:$('projectDescription').value.trim()}});if(!project?.id)throw new Error('创建接口未返回项目 ID');const placeholder=$('project').querySelector('option[value=""]');if(placeholder)placeholder.remove();const option=node('option',project.name||name);option.value=project.id;$('project').append(option);$('project').value=project.id;$('projectDialog').close();await selectProject(project.id,{restore:false});}
+  catch(err){$('projectError').textContent=err.message;$('projectError').hidden=false;}finally{$('createProject').disabled=false;$('cancelProject').disabled=false;}
+});
+$('projectDialog').addEventListener('cancel',event=>{if($('createProject').disabled)event.preventDefault();});
+const tabs=Array.from(document.querySelectorAll('[data-view]'));
+function setView(tab){tabs.forEach(button=>{const selected=button===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;$('panel-'+button.dataset.view).hidden=!selected;});}
+tabs.forEach((tab,index)=>{tab.addEventListener('click',()=>setView(tab));tab.addEventListener('keydown',event=>{let next;if(event.key==='ArrowRight')next=tabs[(index+1)%tabs.length];else if(event.key==='ArrowLeft')next=tabs[(index+tabs.length-1)%tabs.length];else if(event.key==='Home')next=tabs[0];else if(event.key==='End')next=tabs[tabs.length-1];if(next){event.preventDefault();setView(next);next.focus();}});});
+window.addEventListener('beforeunload',event=>{stopPolling();if(state.dirty){event.preventDefault();event.returnValue='';}});
+async function init(){loadHealth();try{await loadProjects();}catch(err){$('project').replaceChildren(node('option','项目加载失败'));$('project').firstChild.value='';notify(err.message,'error');updateControls();}}
+init();
+</script>
+</body>
+</html>

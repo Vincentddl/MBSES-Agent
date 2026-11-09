@@ -1,0 +1,4 @@
+# Compatibility entry point. Use --env-file .env.real; no fixed credentials.
+name: mbses-real
+include:
+  - docker-compose.real.yml
